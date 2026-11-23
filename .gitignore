@@ -38,3 +38,5 @@ out/
 
 # Custom Secrets
 application-secret.properties
+.env
+.env.local

@@ -1,0 +1,47 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: aquamate-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-aquamate}
+      MYSQL_USER: ${MYSQL_USER:-aquamate}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    networks:
+      - aquamate-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: aquamate-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8005}:8080"
+    volumes:
+      - .:/app
+    environment:
+      - TZ=Asia/Seoul
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - aquamate-net
+
+volumes:
+  mysql_data:
+
+networks:
+  aquamate-net:
+    driver: bridge
