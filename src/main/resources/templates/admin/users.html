@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaMate 관리자 : 회원 관리</title>
+    <link rel="stylesheet" href="/aquamate/css/admin.css?v=2">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="/aquamate/js/admin.js?v=2"></script>
+</head>
+<body>
+    <header class="admin-header">
+        <div class="logo-area">
+            <a href="/aquamate/admin">
+                <img src="/aquamate/images/logo.png" alt="AquaMate">
+            </a>
+            <span class="badge">관리자 콘솔</span>
+        </div>
+        <nav class="admin-nav">
+            <a href="/aquamate/admin">대시보드</a>
+            <a href="/aquamate/admin/users" class="active">회원 관리</a>
+            <a href="/aquamate/admin/fish">물고기 도감 관리</a>
+        </nav>
+        <div class="user-actions">
+            <a href="/aquamate/" class="btn-site" target="_blank">사이트 바로가기 ↗</a>
+            <a href="/aquamate/logout" class="btn-logout">로그아웃</a>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <div class="page-title">
+            <h2>👥 회원 관리</h2>
+        </div>
+
+        <div class="card-table">
+            <div class="card-header-bar">
+                <form action="/aquamate/admin/users" method="get" class="search-bar">
+                    <input type="text" name="q" th:value="${query}" class="search-input" placeholder="아이디, 이름, 이메일 검색...">
+                    <button type="submit" class="btn btn-primary">검색</button>
+                    <a th:if="${query != null && !query.isEmpty()}" href="/aquamate/admin/users" class="btn btn-secondary" style="text-decoration: none; line-height: 22px;">초기화</a>
+                </form>
+                <div>
+                    총 회원 수: <strong th:text="${#lists.size(users)} + '명'">0명</strong>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>아이디</th>
+                        <th>이름</th>
+                        <th>이메일</th>
+                        <th>전화번호</th>
+                        <th>권한</th>
+                        <th>즐겨찾기 수</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${users}">
+                        <td><strong th:text="${user.id}">userid</strong></td>
+                        <td th:text="${user.name}">홍길동</td>
+                        <td th:text="${user.email}">user@test.com</td>
+                        <td th:text="${user.phoneNum}">010-1234-5678</td>
+                        <td>
+                            <th:block th:if="${user.id == session.userId}">
+                                <span class="badge badge-admin">관리자 (본인)</span>
+                            </th:block>
+                            <th:block th:if="${user.id != session.userId}">
+                                <select th:onchange="changeUserRole([[${user.id}]], this)"
+                                        th:style="${user.role?.name() == 'ROLE_ADMIN' ? 'color:#c62828; font-weight:bold;' : ''}">
+                                    <option value="ROLE_USER" th:selected="${user.role?.name() == 'ROLE_USER'}">일반회원 (USER)</option>
+                                    <option value="ROLE_ADMIN" th:selected="${user.role?.name() == 'ROLE_ADMIN'}">관리자 (ADMIN)</option>
+                                </select>
+                            </th:block>
+                        </td>
+                        <td th:text="${#sets.size(user.bookmarks)} + '개'">0개</td>
+                        <td>
+                            <button type="button" class="btn btn-warning" th:onclick="openResetPwModal([[${user.id}]])">비번 초기화</button>
+                            <button type="button" class="btn btn-danger" th:if="${user.id != session.userId}" th:onclick="deleteUser([[${user.id}]])">강제 탈퇴</button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #888;">조회된 회원이 없습니다.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 비밀번호 초기화 모달 -->
+    <div id="resetPwModal" class="modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <div class="modal-header">
+                <h3>비밀번호 초기화</h3>
+                <button type="button" class="close-btn" onclick="closeModal('resetPwModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <p><strong id="targetUserDisplay" style="color: #0288d1;"></strong> 사용자의 임시 비밀번호를 설정합니다.</p>
+                <input type="hidden" id="resetUserId">
+                <label for="newPasswordInput">새 임시 비밀번호 (최소 8자)</label>
+                <input type="text" id="newPasswordInput" class="form-control" placeholder="예: TempPass123!">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('resetPwModal')">취소</button>
+                <button type="button" class="btn btn-primary" onclick="submitResetPassword()">초기화 적용</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

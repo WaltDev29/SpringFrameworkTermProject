@@ -54,6 +54,11 @@ public class User {
     @Transient
     private String pwCheck;
 
+    // 사용자 권한 구분 (기본값: ROLE_USER)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", length = 20, nullable = false)
+    private Role role = Role.ROLE_USER;
+
     // 사용자 북마크 목록 (user_bookmark 매핑 테이블로 분리 저장)
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(

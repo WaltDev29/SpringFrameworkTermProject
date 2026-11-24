@@ -1,3 +1,6 @@
+### Agent ###
+*.md
+
 HELP.md
 .gradle
 build/

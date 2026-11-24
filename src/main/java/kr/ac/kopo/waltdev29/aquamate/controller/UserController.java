@@ -133,7 +133,10 @@ public class UserController {
         }
 
         session.setAttribute("userId", id);
-        log.info("[UserController] 로그인 성공: {}", id);
+        userService.findById(id).ifPresent(u -> {
+            session.setAttribute("userRole", u.getRole() != null ? u.getRole().name() : "ROLE_USER");
+        });
+        log.info("[UserController] 로그인 성공: {} (Role: {})", id, session.getAttribute("userRole"));
         return "redirect:/";
     }
 

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaMate 관리자 : 대시보드</title>
+    <link rel="stylesheet" href="/aquamate/css/admin.css?v=2">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="/aquamate/js/admin.js?v=2"></script>
+</head>
+<body>
+    <header class="admin-header">
+        <div class="logo-area">
+            <a href="/aquamate/admin">
+                <img src="/aquamate/images/logo.png" alt="AquaMate">
+            </a>
+            <span class="badge">관리자 콘솔</span>
+        </div>
+        <nav class="admin-nav">
+            <a href="/aquamate/admin" class="active">대시보드</a>
+            <a href="/aquamate/admin/users">회원 관리</a>
+            <a href="/aquamate/admin/fish">물고기 도감 관리</a>
+        </nav>
+        <div class="user-actions">
+            <a href="/aquamate/" class="btn-site" target="_blank">사이트 바로가기 ↗</a>
+            <a href="/aquamate/logout" class="btn-logout">로그아웃</a>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <div class="page-title">
+            <h2>📊 운영 대시보드</h2>
+            <span style="color: var(--text-muted); font-size: 0.9rem;">AquaMate 통합 현황 및 빠른 관리</span>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card users">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <h3>총 가입 회원 수</h3>
+                    <p th:text="${stats.userCount} + '명'">0명</p>
+                </div>
+            </div>
+            <div class="stat-card fishes">
+                <div class="stat-icon">🐟</div>
+                <div class="stat-info">
+                    <h3>등록된 물고기 어종</h3>
+                    <p th:text="${stats.fishCount} + '종'">0종</p>
+                </div>
+            </div>
+            <div class="stat-card bookmarks">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-info">
+                    <h3>누적 즐겨찾기 건수</h3>
+                    <p th:text="${stats.bookmarkCount} + '건'">0건</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="card-table" style="padding: 24px;">
+                <h3 style="margin-top: 0; color: #01579b;">👥 회원 빠른 관리</h3>
+                <p style="color: #666; font-size: 0.9rem;">전체 회원 목록을 조회하고, 권한 변경(ADMIN/USER) 및 비밀번호 초기화, 강제 탈퇴를 수행할 수 있습니다.</p>
+                <a href="/aquamate/admin/users" class="btn btn-primary" style="display: inline-block; text-decoration: none; padding: 10px 18px;">회원 관리 바로가기 →</a>
+            </div>
+
+            <div class="card-table" style="padding: 24px;">
+                <h3 style="margin-top: 0; color: #00796b;">🐟 물고기 도감 빠른 관리</h3>
+                <p style="color: #666; font-size: 0.9rem;">새로운 관상어 어종을 등록하거나, 사육 환경·기본 정보·이미지 경로를 수정하고 삭제할 수 있습니다.</p>
+                <a href="/aquamate/admin/fish" class="btn btn-success" style="display: inline-block; text-decoration: none; padding: 10px 18px;">물고기 도감 관리 바로가기 →</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

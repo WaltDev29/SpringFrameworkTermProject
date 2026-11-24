@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaMate 관리자 : 물고기 도감 관리</title>
+    <link rel="stylesheet" href="/aquamate/css/admin.css?v=3">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="/aquamate/js/admin.js?v=3"></script>
+</head>
+<body>
+    <header class="admin-header">
+        <div class="logo-area">
+            <a href="/aquamate/admin">
+                <img src="/aquamate/images/logo.png" alt="AquaMate">
+            </a>
+            <span class="badge">관리자 콘솔</span>
+        </div>
+        <nav class="admin-nav">
+            <a href="/aquamate/admin">대시보드</a>
+            <a href="/aquamate/admin/users">회원 관리</a>
+            <a href="/aquamate/admin/fish" class="active">물고기 도감 관리</a>
+        </nav>
+        <div class="user-actions">
+            <a href="/aquamate/" class="btn-site" target="_blank">사이트 바로가기 ↗</a>
+            <a href="/aquamate/logout" class="btn-logout">로그아웃</a>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <div class="page-title">
+            <h2>🐟 물고기 도감 관리</h2>
+            <button type="button" class="btn btn-success" onclick="openFishModal('')" style="padding: 10px 18px; font-size: 0.95rem;">+ 신규 어종 등록</button>
+        </div>
+
+        <div class="card-table">
+            <div class="card-header-bar">
+                <div>
+                    총 등록 어종: <strong th:text="${#lists.size(fishList)} + '종'">0종</strong>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>번호</th>
+                        <th>이미지</th>
+                        <th>도감 고유 키</th>
+                        <th>한국어 어종명</th>
+                        <th>품종/특징 요약</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="fish : ${fishList}">
+                        <td><span style="font-weight: bold; color: #0288d1;" th:text="${fish.num}">001</span></td>
+                        <td>
+                            <img th:src="@{${fish.img != null && fish.img.startsWith('/') ? fish.img : '/' + fish.img}}"
+                                 onerror="this.onerror=null; this.src='/aquamate/images/fish_gold.jpg';"
+                                 alt="썸네일"
+                                 style="width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;">
+                        </td>
+                        <td><code th:text="${fish.key}">goldfish</code></td>
+                        <td><strong th:text="${fish.name}">금붕어</strong></td>
+                        <td style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" th:text="${fish.type}">품종 설명...</td>
+                        <td>
+                            <button type="button" class="btn btn-primary" th:onclick="openFishModal([[${fish.key}]])">수정</button>
+                            <button type="button" class="btn btn-danger" th:onclick="deleteFish([[${fish.key}]], [[${fish.name}]])">삭제</button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(fishList)}">
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #888;">등록된 물고기 데이터가 없습니다.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 물고기 등록 / 수정 모달 -->
+    <div id="fishModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <h3 id="fishModalTitle" style="margin: 0; color: #01579b;">물고기 정보</h3>
+                    <span id="fishNumBadge" style="background: #e1f5fe; color: #0288d1; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 0.95rem; border: 1px solid #81d4fa;">
+                        도감 번호: <strong id="fishNumBadgeVal">--</strong>
+                    </span>
+                </div>
+                <button type="button" class="close-btn" onclick="closeModal('fishModal')">&times;</button>
+            </div>
+            <form id="fishForm" onsubmit="event.preventDefault(); submitFishForm();" enctype="multipart/form-data">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="fishKey">도감 고유 키 (영문 식별자) *</label>
+                        <input type="text" id="fishKey" class="form-control" placeholder="예: guppy, neonTetra" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fishNum">등록될 도감 번호 (시스템 자동 배정)</label>
+                        <input type="text" id="fishNum" class="form-control" readonly style="background-color: #e3f2fd; cursor: not-allowed; font-weight: bold; font-size: 1.1rem; color: #01579b; border: 2px solid #90caf9;">
+                        <small style="color: #666; font-size: 0.8rem; margin-top: 4px; display: block;">* 마지막 도감 번호 다음 번호가 자동으로 부여됩니다.</small>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="fishName">한국어 이름 *</label>
+                        <input type="text" id="fishName" class="form-control" placeholder="예: 구피, 네온테트라" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fishImgFile">물고기 이미지 첨부</label>
+                        <input type="file" id="fishImgFile" accept="image/*" class="form-control" onchange="previewFishImage(this)">
+                        <input type="hidden" id="fishImg">
+                        <div id="previewArea" style="margin-top: 8px;">
+                            <img id="imgPreview" src="" alt="이미지 미리보기" style="display:none; width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fishBasic">기본 정보 (각 항목을 엔터(줄바꿈)로 입력하세요)</label>
+                    <textarea id="fishBasic" class="form-control" style="min-height: 100px;" placeholder="학명: Carassius auratus&#10;영문명: Goldfish&#10;분류: 잉어과&#10;서식지: 담수&#10;크기: 5~30cm"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="fishEnv">사육 환경 (각 항목을 엔터(줄바꿈)로 입력하세요)</label>
+                    <textarea id="fishEnv" class="form-control" style="min-height: 100px;" placeholder="적정 수온: 18~24℃&#10;pH: 6.5~7.5&#10;수조 크기: 최소 40L 이상&#10;활동 영역: 중상층"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="fishType">품종 및 특징 설명</label>
+                    <textarea id="fishType" class="form-control" placeholder="품종 및 생물학적 특징 설명..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="fishTaming">사육 방법</label>
+                    <textarea id="fishTaming" class="form-control" placeholder="먹이 주기, 번식, 사육 시 주의사항..."></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('fishModal')">취소</button>
+                    <button type="submit" class="btn btn-success">저장 완료</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 브라우저 캐시 문제 대비 전역 바인딩 안전장치
+        if (typeof window.previewFishImage !== 'function') {
+            window.previewFishImage = function(input) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#imgPreview').attr('src', e.target.result).show();
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                } else {
+                    $('#imgPreview').hide().attr('src', '');
+                }
+            };
+        }
+    </script>
+</body>
+</html>
