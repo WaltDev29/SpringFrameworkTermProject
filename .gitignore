@@ -43,3 +43,7 @@ out/
 application-secret.properties
 .env
 .env.local
+
+### Statics ###
+/src/main/resources/static/images/*.jpg
+/src/main/resources/static/images/*.png

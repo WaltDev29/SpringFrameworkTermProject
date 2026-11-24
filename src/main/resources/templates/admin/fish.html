@@ -4,85 +4,173 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AquaMate 관리자 : 물고기 도감 관리</title>
-    <link rel="stylesheet" href="/aquamate/css/admin.css?v=3">
+    <link rel="stylesheet" href="/aquamate/css/admin.css?v=5">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="/aquamate/js/admin.js?v=3"></script>
+    <script>
+        // 전역 스코프 안전장치 (이미지 미리보기)
+        function previewFishImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#imgPreview').attr('src', e.target.result).show();
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                $('#imgPreview').hide().attr('src', '');
+            }
+        }
+    </script>
+    <script src="/aquamate/js/admin.js?v=4"></script>
 </head>
 <body>
-    <header class="admin-header">
-        <div class="logo-area">
-            <a href="/aquamate/admin">
-                <img src="/aquamate/images/logo.png" alt="AquaMate">
+    <header>
+        <div style="flex: 1;">
+            <a href="/aquamate/" style="display: inline-block; margin-left: 20px;">
+                <img src="/aquamate/images/logo.png" width="200px" alt="AquaMate 로고">
             </a>
-            <span class="badge">관리자 콘솔</span>
         </div>
-        <nav class="admin-nav">
-            <a href="/aquamate/admin">대시보드</a>
-            <a href="/aquamate/admin/users">회원 관리</a>
-            <a href="/aquamate/admin/fish" class="active">물고기 도감 관리</a>
-        </nav>
-        <div class="user-actions">
-            <a href="/aquamate/" class="btn-site" target="_blank">사이트 바로가기 ↗</a>
-            <a href="/aquamate/logout" class="btn-logout">로그아웃</a>
+        <div id="head" style="display: flex; justify-content: center;">
+            <a href="/aquamate/admin">
+                <button id="btn_admin_head"><img src="/aquamate/images/user.png" alt="관리자"></button>
+                <h1>Admin Console</h1>
+            </a>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; margin-right: 20px; margin-top: 10px;">
+            <div style="display: flex; gap: 15px; margin-right: 15px;">
+                <a href="/aquamate/" style="color: white; text-decoration: none; font-weight: bold; cursor: pointer;">사이트 메인 ↗</a>
+                <a href="/aquamate/logout" style="color: #ffcdd2; text-decoration: none; font-weight: bold; cursor: pointer;">로그아웃</a>
+            </div>
+            <nav class="global-nav">
+                <div id="dic">
+                    <a href="/aquamate/dictionary">
+                        <button id="btn_dic"><img src="/aquamate/images/book.png" alt="도감"></button>
+                        <h3>Dictionary</h3>
+                    </a>
+                </div>
+                <div id="match">
+                    <a href="/aquamate/match">
+                        <button id="btn_match"><img src="/aquamate/images/heart.png" alt="매칭"></button>
+                        <h3>Match</h3>
+                    </a>
+                </div>
+                <div id="about">
+                    <a href="/aquamate/about">
+                        <button id="btn_about"><img src="/aquamate/images/bookmark.png" alt="소개"></button>
+                        <h3>About</h3>
+                    </a>
+                </div>
+                <div id="mypage_nav">
+                    <a href="/aquamate/myPage">
+                        <button id="btn_mypage_nav"><img src="/aquamate/images/user.png" alt="마이페이지"></button>
+                        <h3>My Page</h3>
+                    </a>
+                </div>
+            </nav>
         </div>
     </header>
 
-    <div class="admin-container">
-        <div class="page-title">
-            <h2>🐟 물고기 도감 관리</h2>
-            <button type="button" class="btn btn-success" onclick="openFishModal('')" style="padding: 10px 18px; font-size: 0.95rem;">+ 신규 어종 등록</button>
-        </div>
-
-        <div class="card-table">
-            <div class="card-header-bar">
-                <div>
-                    총 등록 어종: <strong th:text="${#lists.size(fishList)} + '종'">0종</strong>
-                </div>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>번호</th>
-                        <th>이미지</th>
-                        <th>도감 고유 키</th>
-                        <th>한국어 어종명</th>
-                        <th>품종/특징 요약</th>
-                        <th>관리</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="fish : ${fishList}">
-                        <td><span style="font-weight: bold; color: #0288d1;" th:text="${fish.num}">001</span></td>
-                        <td>
-                            <img th:src="@{${fish.img != null && fish.img.startsWith('/') ? fish.img : '/' + fish.img}}"
-                                 onerror="this.onerror=null; this.src='/aquamate/images/fish_gold.jpg';"
-                                 alt="썸네일"
-                                 style="width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;">
-                        </td>
-                        <td><code th:text="${fish.key}">goldfish</code></td>
-                        <td><strong th:text="${fish.name}">금붕어</strong></td>
-                        <td style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" th:text="${fish.type}">품종 설명...</td>
-                        <td>
-                            <button type="button" class="btn btn-primary" th:onclick="openFishModal([[${fish.key}]])">수정</button>
-                            <button type="button" class="btn btn-danger" th:onclick="deleteFish([[${fish.key}]], [[${fish.name}]])">삭제</button>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(fishList)}">
-                        <td colspan="6" style="text-align: center; padding: 40px; color: #888;">등록된 물고기 데이터가 없습니다.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="admin-subnav">
+        <a href="/aquamate/admin">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            대시보드
+        </a>
+        <a href="/aquamate/admin/users">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            회원 관리
+        </a>
+        <a href="/aquamate/admin/fish" class="active">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12c3.5-5 9.5-6.5 15-2.5l5-3.5v12l-5-3.5c-5.5 4-11.5 2.5-15-2.5z"></path>
+                <circle cx="6" cy="11" r="1.2" fill="currentColor"></circle>
+                <path d="M11 9.5c0.8 1.5 0.8 3.5 0 5"></path>
+            </svg>
+            물고기 도감 관리
+        </a>
     </div>
+
+    <main>
+        <div id="gradient_top"></div>
+        <section class="admin-section">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24" width="28" height="28" stroke="rgb(0, 110, 255)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12c3.5-5 9.5-6.5 15-2.5l5-3.5v12l-5-3.5c-5.5 4-11.5 2.5-15-2.5z"></path>
+                    <circle cx="6" cy="11" r="1.2" fill="currentColor"></circle>
+                    <path d="M11 9.5c0.8 1.5 0.8 3.5 0 5"></path>
+                </svg>
+                물고기 도감 관리
+            </h2>
+            <div class="section-subtitle">AquaMate 도감에 수록된 어종을 확인하고, 신규 등록 및 사육 환경 정보를 편집합니다.</div>
+
+            <div class="admin-table-container">
+                <div class="table-top-bar">
+                    <div style="font-size: 1rem; color: #444;">
+                        총 등록 어종: <strong style="color: rgb(0, 110, 255); font-size: 1.15rem;" th:text="${#lists.size(fishList)} + '종'">0종</strong>
+                    </div>
+                    <div>
+                        <button type="button" class="aqua-btn aqua-btn-success" onclick="openFishModal('')">+ 신규 어종 등록</button>
+                    </div>
+                </div>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">번호</th>
+                            <th style="width: 80px;">이미지</th>
+                            <th style="width: 140px;">도감 고유 키</th>
+                            <th style="width: 140px;">한국어 어종명</th>
+                            <th>품종 / 특징 요약</th>
+                            <th style="width: 150px;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="fish : ${fishList}">
+                            <td>
+                                <span style="font-weight: bold; color: rgb(0, 110, 255); font-size: 1.05rem;" th:text="${fish.num}">001</span>
+                            </td>
+                            <td>
+                                <img th:src="@{${fish.img != null && fish.img.startsWith('/') ? fish.img : '/' + fish.img}}"
+                                     onerror="this.onerror=null; this.src='/aquamate/images/fish_gold.jpg';"
+                                     alt="썸네일"
+                                     style="width: 50px; height: 50px; object-fit: cover; border-radius: 10px; border: 2px solid #81d4fa; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            </td>
+                            <td><code style="background: #e1f5fe; padding: 4px 8px; border-radius: 6px; color: #0277bd; font-weight: bold;" th:text="${fish.key}">goldfish</code></td>
+                            <td><strong style="color: #222;" th:text="${fish.name}">금붕어</strong></td>
+                            <td style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; padding-left: 20px; color: #555;" th:text="${fish.type}">품종 설명...</td>
+                            <td>
+                                <div style="display: flex; justify-content: center; gap: 6px;">
+                                    <button type="button" class="aqua-btn aqua-btn-sm" th:onclick="openFishModal([[${fish.key}]])">수정</button>
+                                    <button type="button" class="aqua-btn aqua-btn-danger aqua-btn-sm" th:onclick="deleteFish([[${fish.key}]], [[${fish.name}]])">삭제</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(fishList)}">
+                            <td colspan="6" style="text-align: center; padding: 50px; color: #888; font-size: 1.05rem;">
+                                등록된 물고기 데이터가 없습니다.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <div id="gradient_bottom"></div>
+    </main>
 
     <!-- 물고기 등록 / 수정 모달 -->
     <div id="fishModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <h3 id="fishModalTitle" style="margin: 0; color: #01579b;">물고기 정보</h3>
-                    <span id="fishNumBadge" style="background: #e1f5fe; color: #0288d1; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 0.95rem; border: 1px solid #81d4fa;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <h3 id="fishModalTitle">물고기 정보</h3>
+                    <span id="fishNumBadge" style="background: rgba(0, 187, 255, 0.15); color: rgb(0, 110, 255); padding: 4px 12px; border-radius: 14px; font-weight: bold; font-size: 0.95rem; border: 1.5px solid rgb(129, 212, 250);">
                         도감 번호: <strong id="fishNumBadgeVal">--</strong>
                     </span>
                 </div>
@@ -96,69 +184,71 @@
                     </div>
                     <div class="form-group">
                         <label for="fishNum">등록될 도감 번호 (시스템 자동 배정)</label>
-                        <input type="text" id="fishNum" class="form-control" readonly style="background-color: #e3f2fd; cursor: not-allowed; font-weight: bold; font-size: 1.1rem; color: #01579b; border: 2px solid #90caf9;">
+                        <input type="text" id="fishNum" class="form-control" readonly style="background-color: #f1f8fe; cursor: not-allowed; font-weight: bold; font-size: 1.1rem; color: rgb(0, 110, 255); border: 2px solid #b3e5fc;">
                         <small style="color: #666; font-size: 0.8rem; margin-top: 4px; display: block;">* 마지막 도감 번호 다음 번호가 자동으로 부여됩니다.</small>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
-                        <label for="fishName">한국어 이름 *</label>
+                        <label for="fishName">한국어 어종명 *</label>
                         <input type="text" id="fishName" class="form-control" placeholder="예: 구피, 네온테트라" required>
                     </div>
                     <div class="form-group">
-                        <label for="fishImgFile">물고기 이미지 첨부</label>
-                        <input type="file" id="fishImgFile" accept="image/*" class="form-control" onchange="previewFishImage(this)">
-                        <input type="hidden" id="fishImg">
-                        <div id="previewArea" style="margin-top: 8px;">
-                            <img id="imgPreview" src="" alt="이미지 미리보기" style="display:none; width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc;">
+                        <label for="fishImgFile">물고기 대표 사진 등록 / 변경 (선택)</label>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <input type="file" id="fishImgFile" class="form-control" accept="image/*" onchange="previewFishImage(this)" style="flex: 1;">
+                            <img id="imgPreview" src="" alt="미리보기" style="display: none; width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 2px solid rgb(81, 185, 255); box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
                         </div>
+                        <input type="hidden" id="fishImg">
+                        <small style="color: #666; font-size: 0.8rem; margin-top: 4px; display: block;">* 새 이미지를 첨부하지 않으면 기존 등록된 사진이 유지됩니다.</small>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="fishBasic">기본 정보 (각 항목을 엔터(줄바꿈)로 입력하세요)</label>
-                    <textarea id="fishBasic" class="form-control" style="min-height: 100px;" placeholder="학명: Carassius auratus&#10;영문명: Goldfish&#10;분류: 잉어과&#10;서식지: 담수&#10;크기: 5~30cm"></textarea>
+                    <label for="fishBasic">기본 정보 (엔터 개행문자로 항목 구분 입력)</label>
+                    <textarea id="fishBasic" class="form-control" rows="3" placeholder="예:
+학명: Poecilia reticulata
+크기: 3~5cm
+수명: 1~2년"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="fishEnv">사육 환경 (각 항목을 엔터(줄바꿈)로 입력하세요)</label>
-                    <textarea id="fishEnv" class="form-control" style="min-height: 100px;" placeholder="적정 수온: 18~24℃&#10;pH: 6.5~7.5&#10;수조 크기: 최소 40L 이상&#10;활동 영역: 중상층"></textarea>
+                    <label for="fishEnv">사육 환경 정보 (엔터 개행문자로 항목 구분 입력)</label>
+                    <textarea id="fishEnv" class="form-control" rows="3" placeholder="예:
+적정 수온: 24~28°C
+적정 수질: 약산성~약알칼리성 (pH 6.8~7.8)
+수조 크기: 30L 이상 권장"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="fishType">품종 및 특징 설명</label>
-                    <textarea id="fishType" class="form-control" placeholder="품종 및 생물학적 특징 설명..."></textarea>
+                    <label for="fishType">품종 및 생물학적 특징 설명</label>
+                    <textarea id="fishType" class="form-control" rows="2" placeholder="주요 품종, 원산지, 외형적 특징 등을 입력하세요."></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="fishTaming">사육 방법</label>
-                    <textarea id="fishTaming" class="form-control" placeholder="먹이 주기, 번식, 사육 시 주의사항..."></textarea>
+                    <label for="fishTaming">사육 방법 및 주의사항</label>
+                    <textarea id="fishTaming" class="form-control" rows="2" placeholder="먹이 주기, 수온 관리, 번식 및 질병 주의사항 등을 입력하세요."></textarea>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('fishModal')">취소</button>
-                    <button type="submit" class="btn btn-success">저장 완료</button>
+                    <button type="button" class="aqua-btn aqua-btn-secondary" onclick="closeModal('fishModal')">취소</button>
+                    <button type="submit" class="aqua-btn aqua-btn-success">저장하기</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
-        // 브라우저 캐시 문제 대비 전역 바인딩 안전장치
-        if (typeof window.previewFishImage !== 'function') {
-            window.previewFishImage = function(input) {
-                if (input.files && input.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        $('#imgPreview').attr('src', e.target.result).show();
-                    };
-                    reader.readAsDataURL(input.files[0]);
-                } else {
-                    $('#imgPreview').hide().attr('src', '');
-                }
-            };
-        }
-    </script>
+    <footer>
+        <div id="contact">
+            <span id="contact_label">Contact</span>
+            <span class="label"><img src="/aquamate/images/github.png" id="img_github" alt="github"><a href="https://github.com/WaltDev29">WaltDev29</a></span>
+            <span class="label"><img src="/aquamate/images/email.png" id="img_email" alt="email">waltdev29@gmail.com</span>
+        </div>
+        <div id="source">
+            <span id="source_label">source</span>
+            <span class="label"><a href="https://ko.wikipedia.org/wiki/%EC%9C%84%ED%82%A4%EB%B0%B1%EA%B3%BC:%EB%8C%80%EB%AC%B8">Wikipedia</a></span>
+        </div>
+    </footer>
 </body>
 </html>
